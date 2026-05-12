@@ -8,6 +8,12 @@
 #include "mlx/c/private/mlx.h"
 #include "mlx/io.h"
 
+#if defined(__clang__) || defined(__GNUC__)
+#define MLX_C_USED_SYMBOL __attribute__((used))
+#else
+#define MLX_C_USED_SYMBOL
+#endif
+
 extern "C" int
 mlx_load_reader(mlx_array* res, mlx_io_reader in_stream, const mlx_stream s) {
   try {
@@ -65,6 +71,18 @@ extern "C" int mlx_load_safetensors(
     return 1;
   }
   return 0;
+}
+extern "C" MLX_C_USED_SYMBOL int64_t
+mlx_safetensors_mmap_advise_routed(int32_t advice, int32_t cold_pct) {
+  return mlx::core::safetensors_mmap_advise_routed(advice, cold_pct);
+}
+extern "C" MLX_C_USED_SYMBOL int64_t mlx_safetensors_mmap_advise_experts(
+    int32_t advice,
+    const int32_t* layers,
+    const int32_t* experts,
+    int64_t count) {
+  return mlx::core::safetensors_mmap_advise_experts(
+      advice, layers, experts, count);
 }
 extern "C" int mlx_save_writer(mlx_io_writer out_stream, const mlx_array a) {
   try {
