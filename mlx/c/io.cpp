@@ -84,6 +84,38 @@ extern "C" MLX_C_USED_SYMBOL int64_t mlx_safetensors_mmap_advise_experts(
   return mlx::core::safetensors_mmap_advise_experts(
       advice, layers, experts, count);
 }
+extern "C" MLX_C_USED_SYMBOL int64_t
+mlx_safetensors_mmap_advise_layer(int32_t advice, int32_t layer) {
+  return mlx::core::safetensors_mmap_advise_layer(advice, layer);
+}
+extern "C" MLX_C_USED_SYMBOL int64_t
+mlx_safetensors_mmap_tracked_buffer_bytes(void) {
+  return mlx::core::safetensors_mmap_tracked_buffer_bytes();
+}
+extern "C" MLX_C_USED_SYMBOL int mlx_array_new_mmap_file_region(
+    mlx_array* res,
+    const char* file,
+    uint64_t offset,
+    size_t length,
+    const int* shape,
+    int dim,
+    mlx_dtype dtype) {
+  try {
+    mlx::core::Shape cpp_shape(shape, shape + dim);
+    mlx_array_set_(
+        *res,
+        mlx::core::mmap_file_region(
+            std::string(file),
+            offset,
+            length,
+            std::move(cpp_shape),
+            mlx_dtype_to_cpp(dtype)));
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+  return 0;
+}
 extern "C" int mlx_save_writer(mlx_io_writer out_stream, const mlx_array a) {
   try {
     mlx::core::save(mlx_io_writer_get_(out_stream), mlx_array_get_(a));
