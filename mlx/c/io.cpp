@@ -72,6 +72,60 @@ extern "C" int mlx_load_safetensors(
   }
   return 0;
 }
+extern "C" int mlx_load_safetensors_excluding(
+    mlx_map_string_to_array* res_0,
+    mlx_map_string_to_string* res_1,
+    const char* file,
+    const char* const* excluded_keys,
+    int64_t excluded_key_count,
+    const mlx_stream s) {
+  try {
+    std::unordered_set<std::string> excluded;
+    excluded.reserve(static_cast<size_t>(std::max<int64_t>(excluded_key_count, 0)));
+    for (int64_t i = 0; i < excluded_key_count; ++i) {
+      if (excluded_keys != nullptr && excluded_keys[i] != nullptr) {
+        excluded.emplace(excluded_keys[i]);
+      }
+    }
+    auto [arrays, metadata] = mlx::core::load_safetensors_excluding(
+        std::string(file), excluded, mlx_stream_get_(s));
+    mlx_map_string_to_array_set_(*res_0, arrays);
+    mlx_map_string_to_string_set_(*res_1, metadata);
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+  return 0;
+}
+extern "C" int mlx_load_safetensors_excluding_with_options(
+    mlx_map_string_to_array* res_0,
+    mlx_map_string_to_string* res_1,
+    const char* file,
+    const char* const* excluded_keys,
+    int64_t excluded_key_count,
+    bool exact_tensor_buffers,
+    const mlx_stream s) {
+  try {
+    std::unordered_set<std::string> excluded;
+    excluded.reserve(static_cast<size_t>(std::max<int64_t>(excluded_key_count, 0)));
+    for (int64_t i = 0; i < excluded_key_count; ++i) {
+      if (excluded_keys != nullptr && excluded_keys[i] != nullptr) {
+        excluded.emplace(excluded_keys[i]);
+      }
+    }
+    auto [arrays, metadata] = mlx::core::load_safetensors_excluding(
+        std::string(file),
+        excluded,
+        exact_tensor_buffers,
+        mlx_stream_get_(s));
+    mlx_map_string_to_array_set_(*res_0, arrays);
+    mlx_map_string_to_string_set_(*res_1, metadata);
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+  return 0;
+}
 extern "C" MLX_C_USED_SYMBOL int64_t
 mlx_safetensors_mmap_advise_routed(int32_t advice, int32_t cold_pct) {
   return mlx::core::safetensors_mmap_advise_routed(advice, cold_pct);
