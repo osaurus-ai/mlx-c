@@ -32,6 +32,15 @@ extern "C" mlx_stream mlx_stream_new_device(mlx_device dev) {
     return mlx_stream_new_();
   }
 }
+extern "C" mlx_stream mlx_stream_new_thread_unsafe(mlx_device dev) {
+  try {
+    return mlx_stream_new_(
+        mlx::core::new_thread_unsafe_stream(mlx_device_get_(dev)));
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return mlx_stream_new_();
+  }
+}
 extern "C" int mlx_stream_set(mlx_stream* stream, const mlx_stream src) {
   try {
     mlx_stream_set_(*stream, mlx_stream_get_(src));
@@ -97,6 +106,28 @@ extern "C" int mlx_set_default_stream(mlx_stream stream) {
     return 1;
   }
   return 0;
+}
+extern "C" int mlx_stream_run_with(
+    mlx_stream stream, void (*callback)(void*), void* context) {
+  try {
+    if (!callback) {
+      throw std::invalid_argument("mlx_stream_run_with requires a callback");
+    }
+    const auto target = mlx_stream_get_(stream);
+    const auto previous = mlx::core::default_stream(target.device);
+    mlx::core::set_default_stream(target);
+    try {
+      callback(context);
+    } catch (...) {
+      mlx::core::set_default_stream(previous);
+      throw;
+    }
+    mlx::core::set_default_stream(previous);
+    return 0;
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
 }
 extern "C" mlx_stream mlx_default_cpu_stream_new(void) {
   try {
