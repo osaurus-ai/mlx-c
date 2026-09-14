@@ -46,6 +46,37 @@ int mlx_load_safetensors(
     mlx_map_string_to_string* res_1,
     const char* file,
     const mlx_stream s);
+int mlx_load_safetensors_excluding(
+    mlx_map_string_to_array* res_0,
+    mlx_map_string_to_string* res_1,
+    const char* file,
+    const char* const* excluded_keys,
+    int64_t excluded_key_count,
+    const mlx_stream s);
+int mlx_load_safetensors_excluding_with_options(
+    mlx_map_string_to_array* res_0,
+    mlx_map_string_to_string* res_1,
+    const char* file,
+    const char* const* excluded_keys,
+    int64_t excluded_key_count,
+    bool exact_tensor_buffers,
+    const mlx_stream s);
+int64_t mlx_safetensors_mmap_advise_routed(int32_t advice, int32_t cold_pct);
+int64_t mlx_safetensors_mmap_advise_experts(
+    int32_t advice,
+    const int32_t* layers,
+    const int32_t* experts,
+    int64_t count);
+int64_t mlx_safetensors_mmap_advise_layer(int32_t advice, int32_t layer);
+int64_t mlx_safetensors_mmap_tracked_buffer_bytes(void);
+int mlx_array_new_mmap_file_region(
+    mlx_array* res,
+    const char* file,
+    uint64_t offset,
+    size_t length,
+    const int* shape,
+    int dim,
+    mlx_dtype dtype);
 int mlx_save_writer(mlx_io_writer out_stream, const mlx_array a);
 int mlx_save(const char* file, const mlx_array a);
 int mlx_save_gguf(const char* file, mlx_io_gguf gguf);

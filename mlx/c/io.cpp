@@ -8,6 +8,12 @@
 #include "mlx/c/private/mlx.h"
 #include "mlx/io.h"
 
+#if defined(__clang__) || defined(__GNUC__)
+#define MLX_C_USED_SYMBOL __attribute__((used))
+#else
+#define MLX_C_USED_SYMBOL
+#endif
+
 extern "C" int
 mlx_load_reader(mlx_array* res, mlx_io_reader in_stream, const mlx_stream s) {
   try {
@@ -72,6 +78,104 @@ extern "C" int mlx_load_safetensors(
       mlx_map_string_to_array_set_(*res_0, tpl_0);
       mlx_map_string_to_string_set_(*res_1, tpl_1);
     };
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+  return 0;
+}
+extern "C" int mlx_load_safetensors_excluding(
+    mlx_map_string_to_array* res_0,
+    mlx_map_string_to_string* res_1,
+    const char* file,
+    const char* const* excluded_keys,
+    int64_t excluded_key_count,
+    const mlx_stream s) {
+  try {
+    std::unordered_set<std::string> excluded;
+    excluded.reserve(static_cast<size_t>(std::max<int64_t>(excluded_key_count, 0)));
+    for (int64_t i = 0; i < excluded_key_count; ++i) {
+      if (excluded_keys != nullptr && excluded_keys[i] != nullptr) {
+        excluded.emplace(excluded_keys[i]);
+      }
+    }
+    auto [arrays, metadata] = mlx::core::load_safetensors_excluding(
+        std::string(file), excluded, mlx_stream_get_(s));
+    mlx_map_string_to_array_set_(*res_0, arrays);
+    mlx_map_string_to_string_set_(*res_1, metadata);
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+  return 0;
+}
+extern "C" int mlx_load_safetensors_excluding_with_options(
+    mlx_map_string_to_array* res_0,
+    mlx_map_string_to_string* res_1,
+    const char* file,
+    const char* const* excluded_keys,
+    int64_t excluded_key_count,
+    bool exact_tensor_buffers,
+    const mlx_stream s) {
+  try {
+    std::unordered_set<std::string> excluded;
+    excluded.reserve(static_cast<size_t>(std::max<int64_t>(excluded_key_count, 0)));
+    for (int64_t i = 0; i < excluded_key_count; ++i) {
+      if (excluded_keys != nullptr && excluded_keys[i] != nullptr) {
+        excluded.emplace(excluded_keys[i]);
+      }
+    }
+    auto [arrays, metadata] = mlx::core::load_safetensors_excluding(
+        std::string(file),
+        excluded,
+        exact_tensor_buffers,
+        mlx_stream_get_(s));
+    mlx_map_string_to_array_set_(*res_0, arrays);
+    mlx_map_string_to_string_set_(*res_1, metadata);
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+  return 0;
+}
+extern "C" MLX_C_USED_SYMBOL int64_t
+mlx_safetensors_mmap_advise_routed(int32_t advice, int32_t cold_pct) {
+  return mlx::core::safetensors_mmap_advise_routed(advice, cold_pct);
+}
+extern "C" MLX_C_USED_SYMBOL int64_t mlx_safetensors_mmap_advise_experts(
+    int32_t advice,
+    const int32_t* layers,
+    const int32_t* experts,
+    int64_t count) {
+  return mlx::core::safetensors_mmap_advise_experts(
+      advice, layers, experts, count);
+}
+extern "C" MLX_C_USED_SYMBOL int64_t
+mlx_safetensors_mmap_advise_layer(int32_t advice, int32_t layer) {
+  return mlx::core::safetensors_mmap_advise_layer(advice, layer);
+}
+extern "C" MLX_C_USED_SYMBOL int64_t
+mlx_safetensors_mmap_tracked_buffer_bytes(void) {
+  return mlx::core::safetensors_mmap_tracked_buffer_bytes();
+}
+extern "C" MLX_C_USED_SYMBOL int mlx_array_new_mmap_file_region(
+    mlx_array* res,
+    const char* file,
+    uint64_t offset,
+    size_t length,
+    const int* shape,
+    int dim,
+    mlx_dtype dtype) {
+  try {
+    mlx::core::Shape cpp_shape(shape, shape + dim);
+    mlx_array_set_(
+        *res,
+        mlx::core::mmap_file_region(
+            std::string(file),
+            offset,
+            length,
+            std::move(cpp_shape),
+            mlx_dtype_to_cpp(dtype)));
   } catch (std::exception& e) {
     mlx_error(e.what());
     return 1;

@@ -7,6 +7,32 @@
 #include "mlx/c/error.h"
 #include "mlx/c/private/mlx.h"
 #include "mlx/compile_impl.h"
+#include <atomic>
+
+extern "C" uint64_t mlx_detail_compile_cache_id(void) {
+  static std::atomic<uint64_t> next_id{1};
+  static thread_local const uint64_t id =
+      next_id.fetch_add(1, std::memory_order_relaxed);
+  return id;
+}
+
+extern "C" mlx_compile_cache mlx_compile_cache_new() {
+  try {
+    return mlx_compile_cache_new_();
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+  }
+  return {nullptr};
+}
+extern "C" int mlx_compile_cache_free(mlx_compile_cache cache) {
+  try {
+    mlx_compile_cache_free_(cache);
+    return 0;
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+}
 
 extern "C" int
 mlx_compile(mlx_closure* res, const mlx_closure fun, bool shapeless) {
@@ -40,18 +66,29 @@ extern "C" int mlx_detail_compile(
   }
   return 0;
 }
-extern "C" int mlx_detail_compile_clear_cache(void) {
+extern "C" int mlx_detail_compile_cache(mlx_compile_cache* res) {
   try {
-    mlx::core::detail::compile_clear_cache();
+    mlx_compile_cache_set_(*res, mlx::core::detail::compile_cache());
   } catch (std::exception& e) {
     mlx_error(e.what());
     return 1;
   }
   return 0;
 }
-extern "C" int mlx_detail_compile_erase(uintptr_t fun_id) {
+extern "C" int mlx_detail_compile_clear_cache(const mlx_compile_cache cache) {
   try {
-    mlx::core::detail::compile_erase(fun_id);
+    mlx::core::detail::compile_clear_cache(mlx_compile_cache_get_(cache));
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+  return 0;
+}
+extern "C" int mlx_detail_compile_erase(
+    const mlx_compile_cache cache,
+    uintptr_t fun_id) {
+  try {
+    mlx::core::detail::compile_erase(mlx_compile_cache_get_(cache), fun_id);
   } catch (std::exception& e) {
     mlx_error(e.what());
     return 1;
