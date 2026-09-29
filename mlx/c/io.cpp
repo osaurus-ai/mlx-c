@@ -3,6 +3,8 @@
 /* This file is auto-generated. Do not edit manually. */
 /*                                                    */
 
+#include <stdexcept>
+
 #include "mlx/c/io.h"
 #include "mlx/c/error.h"
 #include "mlx/c/private/mlx.h"
@@ -176,6 +178,31 @@ extern "C" MLX_C_USED_SYMBOL int mlx_array_new_mmap_file_region(
             length,
             std::move(cpp_shape),
             mlx_dtype_to_cpp(dtype)));
+  } catch (std::exception& e) {
+    mlx_error(e.what());
+    return 1;
+  }
+  return 0;
+}
+extern "C" MLX_C_USED_SYMBOL int mlx_array_new_mmap_file_region_named(
+    mlx_array* res,
+    const char* file,
+    uint64_t offset,
+    size_t length,
+    const int* shape,
+    int dim,
+    mlx_dtype dtype,
+    const char* tensor_name) {
+  try {
+    if (!res || !file || !shape || dim <= 0 || !tensor_name) {
+      throw std::invalid_argument("[mmap_file_region_named] null argument or invalid rank.");
+    }
+    mlx::core::Shape cpp_shape(shape, shape + dim);
+    mlx_array_set_(
+        *res,
+        mlx::core::mmap_file_region_named(
+            std::string(file), offset, length, std::move(cpp_shape),
+            mlx_dtype_to_cpp(dtype), std::string(tensor_name)));
   } catch (std::exception& e) {
     mlx_error(e.what());
     return 1;
