@@ -34,8 +34,8 @@ if(MLX_C_USE_SYSTEM_MLX)
 else()
   FetchContent_Declare(
     mlx
-    GIT_REPOSITORY "https://github.com/ml-explore/mlx.git"
-    GIT_TAG v0.32.2)
+    GIT_REPOSITORY "https://github.com/osaurus-ai/mlx.git"
+    GIT_TAG f9a2b427775acf2165c4928af094ec06e7b1205d)
   FetchContent_MakeAvailable(mlx)
 endif()
 
@@ -135,3 +135,11 @@ configure_package_config_file(
 
 install(FILES ${MLX_C_CMAKE_BUILD_CONFIG} ${MLX_C_CMAKE_BUILD_VERSION_CONFIG}
         DESTINATION ${MLX_C_CMAKE_INSTALL_MODULE_DIR})
+
+option(MLX_C_BUILD_TESTS "Build C API runtime contracts" OFF)
+if(MLX_C_BUILD_TESTS)
+  enable_testing()
+  add_executable(mlx-c-runtime-contracts tests/gather_qmm.c)
+  target_link_libraries(mlx-c-runtime-contracts PRIVATE mlxc)
+  add_test(NAME mlx-c-runtime-contracts COMMAND mlx-c-runtime-contracts)
+endif()
