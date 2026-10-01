@@ -1,0 +1,22 @@
+name: C API Runtime Compatibility
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  cpu-c-api:
+    if: github.repository == 'osaurus-ai/mlx-c'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CPU dependencies
+        run: sudo apt-get update && sudo apt-get install -y liblapacke-dev libopenblas-dev
+      - name: Build the pinned core and C API
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DMLX_BUILD_METAL=OFF -DMLX_BUILD_CUDA=OFF -DMLX_C_BUILD_EXAMPLES=OFF -DMLX_C_BUILD_TESTS=ON
+          cmake --build build --target mlx-c-runtime-contracts --parallel 2
+      - name: Exercise C API sorted and unsorted gather QMM
+        run: ctest --test-dir build --output-on-failure
